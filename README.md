@@ -1,1 +1,167 @@
-# convert-manual-morecosmetics
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoreCosmetics Converter</title>
+
+<style>
+body{
+    font-family:Arial,sans-serif;
+    background:#111827;
+    color:white;
+    padding:20px;
+}
+.container{
+    max-width:900px;
+    margin:auto;
+}
+input,select,button{
+    width:100%;
+    padding:10px;
+    margin:8px 0;
+    border:none;
+    border-radius:8px;
+}
+button{
+    cursor:pointer;
+}
+textarea{
+    width:100%;
+    height:350px;
+    background:#0f172a;
+    color:#00ff88;
+    border:none;
+    border-radius:8px;
+    padding:10px;
+    resize:vertical;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<h2>MoreCosmetics Converter</h2>
+
+<label>Nama Cosmetic</label>
+<input type="text" id="cosmeticName" value="NAMACOSMET">
+
+<label>Author</label>
+<input type="text" id="author" value="biedzz">
+
+<label>Pos</label>
+<select id="pos">
+<option value="1">1</option>
+<option value="2">2</option>
+<option value="3">3</option>
+</select>
+
+<label>Nama File Download</label>
+<input type="text" id="fileName" value="cosmetic">
+
+<label>File .bbmodel</label>
+<input type="file" id="bbmodel" accept=".bbmodel">
+
+<label>File .json</label>
+<input type="file" id="jsonFile" accept=".json">
+
+<button onclick="generate()">Generate</button>
+
+<h3>Preview</h3>
+
+<textarea id="preview" readonly></textarea>
+
+<button onclick="downloadJson()">Download JSON</button>
+
+</div>
+
+<script>
+
+let finalOutput = "";
+
+async function readFile(file){
+    return await file.text();
+}
+
+async function generate(){
+
+    const bbmodelFile =
+        document.getElementById("bbmodel").files[0];
+
+    const jsonFile =
+        document.getElementById("jsonFile").files[0];
+
+    if(!bbmodelFile || !jsonFile){
+        alert("Pilih kedua file terlebih dahulu!");
+        return;
+    }
+
+    const bbText = await readFile(bbmodelFile);
+    const jsonText = await readFile(jsonFile);
+
+    let textureBase64 = "";
+
+    const textureMatch =
+        bbText.match(/iV[A-Za-z0-9+/=]+/);
+
+    if(textureMatch){
+        textureBase64 = textureMatch[0];
+    }else{
+        alert("Texture base64 tidak ditemukan!");
+        return;
+    }
+
+    let modelJson;
+
+    try{
+        modelJson = JSON.stringify(JSON.parse(jsonText));
+    }catch{
+        alert("File JSON tidak valid!");
+        return;
+    }
+
+    const cosmeticName =
+        document.getElementById("cosmeticName").value;
+
+    const author =
+        document.getElementById("author").value;
+
+    const pos =
+        document.getElementById("pos").value;
+
+    finalOutput =
+`{"version":1,"name":"${cosmeticName}","id":0,"pos":${pos},"author":"${author}","texture":"${textureBase64}","model":${modelJson},"models":[]}`;
+
+    document.getElementById("preview").value =
+        finalOutput;
+}
+
+function downloadJson(){
+
+    if(!finalOutput){
+        alert("Generate dulu!");
+        return;
+    }
+
+    const fileName =
+        document.getElementById("fileName").value || "cosmetic";
+
+    const blob =
+        new Blob([finalOutput],
+        {type:"application/json"});
+
+    const a =
+        document.createElement("a");
+
+    a.href = URL.createObjectURL(blob);
+    a.download = fileName + ".json";
+    a.click();
+
+    URL.revokeObjectURL(a.href);
+}
+
+</script>
+
+</body>
+</html># convert-manual-morecosmetics
